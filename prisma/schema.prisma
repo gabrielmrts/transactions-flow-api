@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id Int @id @default(autoincrement()) 
+  fullName String 
+  document String 
+  email String 
+  password String 
+  
+  wallet Wallet?
+  userType UserType
+   
+  @@unique([document, email])
+  @@map("accounts")
+}
+
+model Wallet {
+  id Int @id @default(autoincrement()) 
+  balance Float @default(0)
+  account Account @relation(fields: [accountId], references: [id])
+  accountId Int @unique
+
+  outgoingTransactions Transaction[] @relation("PayerTransactions")
+  incomingTransactions Transaction[] @relation("PayeeTransactions")
+  
+  @@map("wallets")
+}
+
+model Transaction {
+  id Int @id @default(autoincrement())
+
+  ammount Float @default(0)
+  
+  payer Wallet @relation("PayerTransactions", fields: [payerId], references: [id])
+  payee Wallet @relation("PayeeTransactions", fields: [payeeId], references: [id])
+  payerId Int
+  payeeId Int
+
+  transactionHistory TransactionHistory?
+
+  @@map("transactions")
+}
+
+model TransactionHistory {
+  id Int @id @default(autoincrement())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int @unique
+  createdAt DateTime  @default(now())
+  status TransactionStatus @default(PENDING)
+  details Json?
+
+  @@map("transaction_history")
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum UserType {
+  CUSTOMER
+  MERCHANT
+}
