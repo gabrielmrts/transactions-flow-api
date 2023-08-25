@@ -9,13 +9,13 @@ datasource db {
 
 model Account {
   id Int @id @default(autoincrement()) 
-  fullName String 
+  fullName String @map("full_name")
   document String 
   email String 
   password String 
   
   wallet Wallet?
-  userType UserType
+  userType UserType @map("user_type")
    
   @@unique([document, email])
   @@map("accounts")
@@ -25,7 +25,7 @@ model Wallet {
   id Int @id @default(autoincrement()) 
   balance Float @default(0)
   account Account @relation(fields: [accountId], references: [id])
-  accountId Int @unique
+  accountId Int @unique @map("account_id")
 
   outgoingTransactions Transaction[] @relation("PayerTransactions")
   incomingTransactions Transaction[] @relation("PayeeTransactions")
@@ -40,8 +40,8 @@ model Transaction {
   
   payer Wallet @relation("PayerTransactions", fields: [payerId], references: [id])
   payee Wallet @relation("PayeeTransactions", fields: [payeeId], references: [id])
-  payerId Int
-  payeeId Int
+  payerId Int @map("payer_id")
+  payeeId Int @map("payee_id")
 
   transactionHistory TransactionHistory?
 
@@ -52,7 +52,7 @@ model TransactionHistory {
   id Int @id @default(autoincrement())
 
   transaction Transaction @relation(fields: [transactionId], references: [id])
-  transactionId Int @unique
+  transactionId Int @unique @map("transaction_id")
   createdAt DateTime  @default(now())
   status TransactionStatus @default(PENDING)
   details Json?
