@@ -45,6 +45,7 @@ export class TransactionService {
             }
             
             const payerAccount = await this.userService.findById(payerId);
+            const payeeAccount = await this.userService.findById(payeeId);
             const canProcessTransaction = await this.canMakeTransaction();
 
             if (!canProcessTransaction) {
@@ -58,18 +59,20 @@ export class TransactionService {
             // Add value to payee wallet
             await this.walletService.addBalance(tx, payeeWallet.id, ammount);
 
-            this.sendTransactionInformationEmail(payerAccount.email);
+            await this.sendTransactionInformationEmail(payerAccount.email, payerAccount.fullName, payeeAccount.fullName, ammount);
         });
     }
 
-    async sendTransactionInformationEmail(to: string) {
+    async sendTransactionInformationEmail(to: string, payerName: string, payeeName: string, ammount: number) {
         await this.mailService.sendMail({
             to,
             from: 'noreply@transactions.com',
-            subject: 'Transaction Confirmation',
+            subject: 'Confirmação de Transação',
             template: 'transaction',
             context: {
-                name: 'gabriel'
+                name: payerName,
+                payee: payeeName,
+                ammount: ammount
             },
         });
     }
