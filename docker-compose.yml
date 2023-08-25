@@ -8,3 +8,8 @@ services:
       - POSTGRES_USER=dev
       - POSTGRES_PASSWORD=dev
       - POSTGRES_DATABASE=dev
+  smtp:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025

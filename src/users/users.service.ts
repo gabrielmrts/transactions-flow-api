@@ -13,4 +13,12 @@ export class UsersService {
             }
         });
     }
+
+    async findById(id: number): Promise<Account | undefined> {
+        return this.prisma.account.findFirst({
+            where: {
+                id
+            }
+        });
+    }
 }

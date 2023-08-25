@@ -3,12 +3,16 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletService } from 'src/wallet/wallet.service';
 import axios from 'axios';
+import { MailerService } from '@nestjs-modules/mailer';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class TransactionService {
     constructor(
         private prismaService: PrismaService,
-        private walletService: WalletService
+        private walletService: WalletService,
+        private mailService: MailerService,
+        private userService: UsersService
     ) {}
 
     async createTransaction(prisma: Prisma.TransactionClient,ammount: number, payerId: number, payeeId: number) {
@@ -35,11 +39,12 @@ export class TransactionService {
             if (!payerWallet || !payeeWallet) {
                 throw new HttpException('Wallet not found', HttpStatus.BAD_REQUEST);
             }
-
+            
             if (payerWallet.balance === 0) {
                 throw new HttpException('Insufficient balance to complete the transaction.', HttpStatus.BAD_REQUEST);
             }
-
+            
+            const payerAccount = await this.userService.findById(payerId);
             const canProcessTransaction = await this.canMakeTransaction();
 
             if (!canProcessTransaction) {
@@ -52,6 +57,20 @@ export class TransactionService {
             await this.createTransaction(tx, ammount, payerId, payeeId);
             // Add value to payee wallet
             await this.walletService.addBalance(tx, payeeWallet.id, ammount);
+
+            this.sendTransactionInformationEmail(payerAccount.email);
+        });
+    }
+
+    async sendTransactionInformationEmail(to: string) {
+        await this.mailService.sendMail({
+            to,
+            from: 'noreply@transactions.com',
+            subject: 'Transaction Confirmation',
+            template: 'transaction',
+            context: {
+                name: 'gabriel'
+            },
         });
     }
 
